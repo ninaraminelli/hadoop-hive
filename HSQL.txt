@@ -23,3 +23,35 @@ join categories c
 on p.product_category_id = c.category_id
 group by category_name, product_name) q) q1
 where rnk <=5;
+
+# Rank the revenue by category for each department
+
+select department_name, category_name, revenue,
+dense_rank() over (partition by department_name order by revenue desc) rnk
+from(
+select department_name,category_name, sum(order_item_subtotal) revenue 
+from order_items oi 
+join products p
+on oi.order_item_product_id = p.product_id 
+join categories c
+on p.product_category_id = c.category_id
+join departments d
+on c.category_department_id = d.department_id
+group by  department_name, category_name) q;
+
+# Percental of categories revenues in each department
+
+select department_name, category_name, revenue_by_category, 
+sum(revenue_by_category) over (partition by department_name),
+(revenue_by_category/sum(revenue_by_category) over (partition by department_name))*100 pct_revenue
+from(
+select department_name,category_name, sum(order_item_subtotal) revenue_by_category 
+from order_items oi 
+join products p
+on oi.order_item_product_id = p.product_id 
+join categories c
+on p.product_category_id = c.category_id
+join departments d
+on c.category_department_id = d.department_id
+group by  department_name, category_name) q
+order by department_name, pct_revenue desc;
