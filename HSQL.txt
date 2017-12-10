@@ -1,0 +1,25 @@
+# Daily revenue for each category
+
+select order_date, category_name, sum(order_item_subtotal) daily_revenue from orders o 
+join order_items oi 
+on o.order_id=oi.order_item_id 
+join products p 
+on oi.order_item_product_id = p.product_id 
+join categories c 
+on p.product_category_id = c.category_id
+group by order_date, category_name;
+
+
+# Top 5 from each category
+
+select * from(
+select category_name, product_name, total_quantity,
+dense_rank() over (partition by category_name order by total_quantity desc) rnk
+from (
+select category_name, product_name, sum(order_item_quantity) total_quantity 
+from order_items oi  join products p
+on oi.order_item_product_id = p.product_id 
+join categories c 
+on p.product_category_id = c.category_id
+group by category_name, product_name) q) q1
+where rnk <=5;

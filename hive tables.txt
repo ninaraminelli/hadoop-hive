@@ -1,0 +1,80 @@
+create external table categories(category_id int, category_department_id int,  category_name varchar(45))
+row format delimited fields terminated by ","
+lines terminated by "\n"
+location '/user/ninaraminelli/retail_db/categories';
+
+create external table customers(customer_fname varchar(45), customer_lname varchar(45),  customer_email varchar(45), customer_password varchar(45), customer_street varchar(45), customer_city varchar(45), customer_state varchar(45), customer_zipcode varchar(45))
+row format delimited fields terminated by ","
+lines terminated by "\n"
+location '/user/ninaraminelli/retail_db/customers';
+
+create external table departments(department_id int, department_name varchar(45))
+row format delimited fields terminated by ","
+lines terminated by "\n"
+location '/user/ninaraminelli/retail_db/departments';
+
+create external table order_items(order_item_id int, order_item_order_id int, order_item_product_id int, order_item_quantity tinyint, order_item_subtotal float, order_item_product_price float)
+row format delimited fields terminated by ","
+lines terminated by "\n"
+location '/user/ninaraminelli/retail_db/order_items';
+
+create external table orders(order_id int, order_date bigint, order_customer_id int, order_status varchar(45))
+row format delimited fields terminated by "|"
+lines terminated by "\n"
+location '/user/ninaraminelli/retail_db/orders';
+
+create external table products(product_id int, product_category_id int, product_name varchar(45), product_description varchar(255), product_price float, product_image varchar(255))
+row format delimited fields terminated by ","
+lines terminated by "\n"
+location '/user/ninaraminelli/retail_db/products';
+
+---------------------------------------
+
+load data local inpath '/data/retail_db' into categories;
+
+------------------------------------
+
+create table categories(category_id int, category_department_id int,  category_name varchar(45))
+row format delimited fields terminated by "|"
+lines terminated by "\n";
+
+create table customers(customer_fname varchar(45), customer_lname varchar(45),  customer_email varchar(45), customer_password varchar(45), customer_street varchar(45), customer_city varchar(45), customer_state varchar(45), customer_zipcode varchar(45))
+row format delimited fields terminated by "|"
+lines terminated by "\n";
+
+create table departments(department_id int, department_name varchar(45))
+row format delimited fields terminated by "|"
+lines terminated by "\n";
+
+create table order_items(order_item_id int, order_item_order_id int, order_item_product_id int, order_item_quantity tinyint, order_item_subtotal float, order_item_product_price float)
+row format delimited fields terminated by "|"
+lines terminated by "\n";
+
+create table orders(order_id int, order_date bigint, order_customer_id int, order_status varchar(45))
+row format delimited fields terminated by "|"
+lines terminated by "\n";
+
+create table products(product_id int, product_category_id int, product_name varchar(45), product_description varchar(255), product_price float, product_image varchar(255))
+row format delimited fields terminated by "|";
+
+---------------------------------
+
+create table orders_bucketed(order_id int, order_date bigint, order_customer_id int, order_status varchar(45))
+clustered by (order_id) into 10 buckets
+row format delimited fields terminated by "|"
+lines terminated by "\n"; 
+
+create table orders_items_bucketed(order_id int, order_date bigint, order_customer_id int, order_status varchar(45))
+clustered by (order_id) into 10 buckets
+row format delimited fields terminated by "|"
+lines terminated by "\n"; 
+
+-----------------------------------
+
+create table orders_partitioned(order_id int, order_date bigint, order_customer_id int, order_status varchar(45))
+partitioned by (order_month String)
+row format delimited fields terminated by "|"
+lines terminated by "\n"; 
+
+insert overwrite table orders_partitioned partition (order_month) select order_id, order_date, order_customer_id, order_status, substr(order_date, 1, 7) order_month from ninaraminelli_stage.orders;
+------------------------------------
